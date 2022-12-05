@@ -1,22 +1,41 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Union
 import pandas as pd
 
 app = FastAPI()
 
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 def transform_to_int(x):
     x = x.split(',')
     return [int(i) for i in x]
+
 
 @app.get('/FCFS')
 def FCFS(pr, at, bt):
     pr = transform_to_int(pr)
     at = transform_to_int(at)
     bt = transform_to_int(bt)
+    time = min(at)
     df = pd.DataFrame({'pr': pr, 'at': at, 'bt': bt})
     df = df.sort_values('at')
     ct = list()
-    temp = 0
+    temp = time
     for i in range(len(df)):
         temp += df.iloc[i]['bt']
         ct.append(temp)
@@ -24,7 +43,8 @@ def FCFS(pr, at, bt):
     df['tat'] = df.apply(lambda x: x['ct'] - x['at'], axis=1)
     df['wt'] = df.apply(lambda x: x['tat'] - x['bt'], axis=1)
     df = df.sort_values('pr')
-    return {'table' : {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+    return {'table': {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+
 
 @app.get('/SJF')
 def SJF(pr, at, bt):
@@ -50,7 +70,8 @@ def SJF(pr, at, bt):
     df = df.sort_values('pr')
     df['tat'] = df.apply(lambda x: x['ct'] - x['at'], axis=1)
     df['wt'] = df.apply(lambda x: x['tat'] - x['bt'], axis=1)
-    return {'table' : {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+    return {'table': {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+
 
 @app.get('/SJF_P')
 def SJF_p(pr, at, bt):
@@ -82,7 +103,8 @@ def SJF_p(pr, at, bt):
     df = df.sort_values('pr')
     df['tat'] = df.apply(lambda x: x['ct'] - x['at'], axis=1)
     df['wt'] = df.apply(lambda x: x['tat'] - x['bt'], axis=1)
-    return {'table' : {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+    return {'table': {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+
 
 @app.get('/LRF')
 def LJF(pr, at, bt):
@@ -104,11 +126,13 @@ def LJF(pr, at, bt):
             temp += bt_temp
             time += bt_temp
             df['ct'][i] = temp
-        temp_df = temp_df.drop(copy_df.index)
+            break
+        temp_df = temp_df.drop([int(copy_df.index[0])])
     df = df.sort_values('pr')
     df['tat'] = df.apply(lambda x: x['ct'] - x['at'], axis=1)
     df['wt'] = df.apply(lambda x: x['tat'] - x['bt'], axis=1)
-    return {'table' : {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+    return {'table': {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+
 
 @app.get('/LRF_P')
 def LJF_p(pr, at, bt):
@@ -145,7 +169,8 @@ def LJF_p(pr, at, bt):
     df = df.sort_values('pr')
     df['tat'] = df.apply(lambda x: x['ct'] - x['at'], axis=1)
     df['wt'] = df.apply(lambda x: x['tat'] - x['bt'], axis=1)
-    return {'table' : {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+    return {'table': {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+
 
 @app.get('/Priority')
 def Priority(pr, at, bt, priority):
@@ -172,7 +197,8 @@ def Priority(pr, at, bt, priority):
     df = df.sort_values('pr')
     df['tat'] = df.apply(lambda x: x['ct'] - x['at'], axis=1)
     df['wt'] = df.apply(lambda x: x['tat'] - x['bt'], axis=1)
-    return {'table' : {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist(), 'priority': df['priority'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+    return {'table': {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist(), 'priority': df['priority'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+
 
 @app.get('/Priority_P')
 def Priority_p(pr, at, bt, priority):
@@ -205,7 +231,8 @@ def Priority_p(pr, at, bt, priority):
     df = df.sort_values('pr')
     df['tat'] = df.apply(lambda x: x['ct'] - x['at'], axis=1)
     df['wt'] = df.apply(lambda x: x['tat'] - x['bt'], axis=1)
-    return {'table' : {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist(), 'priority': df['priority'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+    return {'table': {'pr': df['pr'].tolist(), 'at': df['at'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist(), 'priority': df['priority'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+
 
 @app.get('/RoundRobin')
 def RoundRobin(pr, bt, time_quanta):
@@ -228,4 +255,4 @@ def RoundRobin(pr, bt, time_quanta):
                 copy_df = copy_df.drop([i])
     df['tat'] = df.apply(lambda x: x['ct'], axis=1)
     df['wt'] = df.apply(lambda x: x['tat'] - x['bt'], axis=1)
-    return {'table' : {'pr': df['pr'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
+    return {'table': {'pr': df['pr'].tolist(), 'bt': df['bt'].tolist(), 'ct': df['ct'].tolist(), 'tat': df['tat'].tolist(), 'wt': df['wt'].tolist()}, 'wt_avg': df['wt'].mean(), 'tat_avg': df['tat'].mean()}
